@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>💡 Page de Démonstration</h2>
+
+<div class="info-box">
+    <h3>🎯 Fonctionnalités testées</h3>
+    <p>Cette page démontre l'intégration de plusieurs composants :</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+    <div
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white; text-align: center;">
+        <h3 style="color: white; margin-bottom: 1rem;">💾 Cache Redis</h3>
+        <div style="font-size: 3rem; font-weight: bold;">{{ visit_count }}</div>
+        <p style="margin-top: 0.5rem; opacity: 0.9;">Visites enregistrées dans Redis</p>
+    </div>
+
+    <div
+        style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 2rem; border-radius: 12px; color: white; text-align: center;">
+        <h3 style="color: white; margin-bottom: 1rem;">🗄️ PostgreSQL</h3>
+        <div style="font-size: 1.5rem; font-weight: bold;">✅ Connecté</div>
+        <p style="margin-top: 0.5rem; opacity: 0.9;">Base de données opérationnelle</p>
+    </div>
+
+    <div
+        style="background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); padding: 2rem; border-radius: 12px; color: white; text-align: center;">
+        <h3 style="color: white; margin-bottom: 1rem;">⏰ Timestamp</h3>
+        <div style="font-size: 1.2rem; font-weight: bold;">{{ timestamp|date:"H:i:s" }}</div>
+        <p style="margin-top: 0.5rem; opacity: 0.9;">{{ timestamp|date:"d/m/Y" }}</p>
+    </div>
+</div>
+
+<div class="info-box" style="margin-top: 2rem;">
+    <h3>🔍 Comment ça marche ?</h3>
+    <ul style="margin-top: 1rem; margin-left: 2rem;">
+        <li><strong>Compteur de visites</strong> : Stocké dans Redis avec <code>cache.get()</code> et
+            <code>cache.set()</code></li>
+        <li><strong>Connexion base de données</strong> : Django ORM connecté à PostgreSQL</li>
+        <li><strong>Timestamp</strong> : Généré côté serveur avec <code>timezone.now()</code></li>
+    </ul>
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <p style="color: #718096;">
+        <strong>💡 Astuce :</strong> Rechargez la page pour voir le compteur augmenter !
+    </p>
+</div>
+{% endblock %}
