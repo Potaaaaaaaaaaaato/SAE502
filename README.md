@@ -1,5 +1,8 @@
 # SAE502 - Déploiement automatisé Django
 
+[![CI](https://github.com/<username>/SAE502/workflows/CI%20-%20Continuous%20Integration/badge.svg)](https://github.com/<username>/SAE502/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/<username>/SAE502/workflows/Build%20%26%20Push%20Docker%20Images/badge.svg)](https://github.com/<username>/SAE502/actions/workflows/docker-build.yml)
+
 ![SAE502 Banner](https://img.shields.io/badge/SAE502-Automatisation%20Django-blue?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=green)
@@ -283,11 +286,42 @@ Les backups automatiques de PostgreSQL sont configurés via Ansible :
 
 ## CI/CD
 
-Le pipeline GitHub Actions s'exécute automatiquement sur chaque push vers `main` :
+Intégration complète avec GitHub Actions pour automatiser tests, builds et déploiement.
 
-1. **Tests** : Linting (flake8), tests unitaires Django
-2. **Build** : Construction des images Docker
-3. **Deploy** : Déploiement automatique via Ansible
+### Workflows disponibles
+
+#### 🧪 CI - Continuous Integration
+**Déclenchement** : Push sur `main`/`develop`, Pull Requests  
+**Actions** :
+- ✅ Linting (Black, isort, flake8)
+- ✅ Tests Django avec PostgreSQL et Redis
+- ✅ Build et validation des images Docker
+- ✅ Scan de sécurité (Trivy)
+
+#### 🐳 Build & Push Docker Images
+**Déclenchement** : Push sur `main`, tags, manuel  
+**Actions** :
+- 📦 Build des 3 images (django-app, nginx, monitoring)
+- 📤 Push vers GitHub Container Registry (GHCR)
+- 🏷️ Tagging automatique (latest, version, sha)
+- 🔔 Notifications Slack/Telegram
+
+#### 🚀 CD - Continuous Deployment (Manuel)
+**Déclenchement** : Manuel uniquement  
+**Actions** :
+- 🎯 Choix de l'environnement (staging/production)
+- 📋 Sélection du tag d'image à déployer
+- 🤖 Déploiement via Ansible
+- ✅ Health check post-déploiement
+- 🔔 Notifications de succès/échec
+
+### Configuration
+
+Voir [.github/CICD_GUIDE.md](.github/CICD_GUIDE.md) pour :
+- Configuration des secrets GitHub
+- Setup des notifications (Slack/Telegram)
+- Instructions de déploiement
+- Troubleshooting
 
 ## Documentation
 

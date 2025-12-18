@@ -1,49 +1,25 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Bienvenue sur le projet SAE502 ! 🎉</h2>
+<h1>SAE502</h1>
+<p class="subtitle">
+    Plateforme de déploiement automatisé pour applications Django.<br>
+    Infrastructure moderne, sécurisée et prête pour la production.
+</p>
 
-<div class="info-box">
-    <h3>📋 À propos de ce projet</h3>
-    <p>
-        Ce projet démontre une <strong>infrastructure de déploiement complètement automatisée</strong>
-        pour une application Django en production, utilisant :
-    </p>
-    <ul style="margin-top: 1rem; margin-left: 2rem;">
-        <li>🐳 <strong>Docker</strong> pour la conteneurisation</li>
-        <li>🤖 <strong>Ansible</strong> pour l'automatisation du déploiement</li>
-        <li>🔒 <strong>HTTPS</strong> avec certificats Let's Encrypt</li>
-        <li>📊 <strong>Monitoring</strong> proactif avec alertes</li>
-        <li>💾 <strong>Backups</strong> automatiques quotidiens</li>
-        <li>🔄 <strong>CI/CD</strong> avec GitHub Actions</li>
-    </ul>
+<div class="text-center">
+    <div class="status-indicator">
+        <span class="status-dot"></span>
+        <span>Système opérationnel</span>
+    </div>
 </div>
 
-<div class="info-box">
-    <h3>🏗️ Architecture</h3>
-    <p>L'application est composée de plusieurs conteneurs Docker orchestrés :</p>
-    <ul style="margin-top: 1rem; margin-left: 2rem;">
-        <li><strong>django-app</strong> : Application Django + Gunicorn</li>
-        <li><strong>nginx</strong> : Reverse proxy et serveur HTTPS</li>
-        <li><strong>postgresql</strong> : Base de données relationnelle</li>
-        <li><strong>redis</strong> : Cache et broker Celery</li>
-        <li><strong>monitoring</strong> : Supervision et healthchecks</li>
-    </ul>
-</div>
-
-<div class="info-box">
-    <h3>⚡ Déploiement automatisé</h3>
-    <p>
-        Le déploiement complet sur un serveur vierge s'effectue en <strong>une seule commande</strong> :
-    </p>
-    <pre
-        style="background: #2d3748; color: #fff; padding: 1rem; border-radius: 8px; margin-top: 1rem; overflow-x: auto;">ansible-playbook -i inventories/production site.yml</pre>
-</div>
-
-<div
-    style="text-align: center; margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
-    <h3 style="color: white;">📅 Horodatage serveur</h3>
-    <p style="font-size: 1.2rem; margin-top: 0.5rem;">{{ timestamp|date:"d/m/Y H:i:s" }}</p>
-    <p style="opacity: 0.9; margin-top: 0.5rem;">Fuseau horaire : Europe/Paris</p>
+<div class="tech-badges">
+    <span class="badge-tech">🐍 Django</span>
+    <span class="badge-tech">🐳 Docker</span>
+    <span class="badge-tech">🤖 Ansible</span>
+    <span class="badge-tech">🗄️ PostgreSQL</span>
+    <span class="badge-tech">⚡ Redis</span>
+    <span class="badge-tech">🌐 Nginx</span>
 </div>
 {% endblock %}

@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Ubuntu 22.04 LTS (Jammy) - ARM64 for Apple Silicon
+  config.vm.box = "bento/ubuntu-22.04-arm64"
+  
+  # Configuration du nom de la VM
+  config.vm.hostname = "sae502-test"
+  
+  # Configuration réseau - IP fixe pour Ansible
+  config.vm.network "private_network", ip: "192.168.56.10"
+  
+  # Port forwarding pour accès web local
+  config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 443, host: 8443, host_ip: "127.0.0.1"
+  
+  # Configuration des ressources de la VM
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "SAE502-Test-VM"
+    vb.memory = "2048"  # 2GB RAM (minimum pour Docker)
+    vb.cpus = 2
+    
+    # Optimisations performance
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+  end
+  
+  # Provision initiale - install Python pour Ansible
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y python3 python3-pip
+    echo "VM ready for Ansible provisioning!"
+  SHELL
+  
+  # Message de fin
+  config.vm.post_up_message = <<-MESSAGE
+    ╔════════════════════════════════════════════════╗
+    ║   SAE502 Test VM Ready!                        ║
+    ╠════════════════════════════════════════════════╣
+    ║   IP Address: 192.168.56.10                    ║
+    ║   SSH: vagrant ssh                             ║
+    ║   Test Ansible:                                ║
+    ║     ansible-playbook -i inventories/vagrant/hosts site.yml
+    ║                                                ║
+    ║   Access app after deployment:                 ║
+    ║     http://localhost:8080                      ║
+    ╚════════════════════════════════════════════════╝
+  MESSAGE
+end

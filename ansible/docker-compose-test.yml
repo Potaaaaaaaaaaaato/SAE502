@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # Simule un serveur Ubuntu pour tester Ansible
+  ansible-test-server:
+    image: ubuntu:22.04
+    container_name: sae502-ansible-test
+    hostname: sae502-test
+
+    # Garde le conteneur actif
+    command: /bin/bash -c "apt-get update && apt-get install -y openssh-server python3 sudo && mkdir -p /run/sshd && /usr/sbin/sshd -D"
+
+    # Ports exposés
+    ports:
+      - "2222:22" # SSH
+      - "8080:80" # HTTP
+      - "8443:443" # HTTPS
+
+    # Volumes pour persister les données
+    volumes:
+      - ansible_test_data:/opt/sae502
+
+    # Privilèges nécessaires pour Docker-in-Docker et services système
+    privileged: true
+
+    networks:
+      - ansible_test_net
+
+networks:
+  ansible_test_net:
+    driver: bridge
+
+volumes:
+  ansible_test_data:

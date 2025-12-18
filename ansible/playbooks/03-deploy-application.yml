@@ -1,0 +1,105 @@
+---
+# Playbook 03: Deploy Application
+# Deploys the Django application with Docker Compose
+# - Clones Git repository
+# - Generates .env file from Vault variables
+# - Builds and starts Docker containers
+# - Runs Django migrations
+# - Creates superuser
+
+- name: Deploy Django application
+  hosts: all
+  become: yes
+  become_user: "{{ deploy_user }}"
+  gather_facts: yes
+
+  tasks:
+    - name: Display deployment information
+      debug:
+        msg: "Deploying {{ project_name }} from {{ git_repo_url }}"
+
+    - name: Clone or update Git repository
+      git:
+        repo: "{{ git_repo_url }}"
+        dest: "{{ project_root }}/app"
+        version: "{{ git_branch }}"
+        force: yes
+      register: git_result
+
+    - name: Display Git status
+      debug:
+        msg: "Repository cloned/updated. Current HEAD: {{ git_result.after }}"
+
+    - name: Generate .env file from Vault variables
+      template:
+        src: ../templates/env.j2
+        dest: "{{ project_root }}/app/docker/.env"
+        mode: '0600'
+
+    - name: Stop existing containers (if any)
+      command: docker compose down
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      ignore_errors: yes
+
+    - name: Build Docker images
+      command: docker compose build --no-cache
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      register: build_result
+
+    - name: Start Docker containers
+      command: docker compose up -d
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      register: compose_up_result
+
+    - name: Wait for Django container to be healthy
+      command: docker compose ps
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      register: compose_ps
+      until: "'(healthy)' in compose_ps.stdout"
+      retries: 30
+      delay: 2
+
+    - name: Display container status
+      debug:
+        var: compose_ps.stdout_lines
+
+    - name: Run Django migrations
+      command: docker compose exec -T django-app python manage.py migrate --noinput
+      args:
+        chdir: "{{ project_root }}/app/docker"
+
+    - name: Create Django superuser (if not exists)
+      command: >
+        docker compose exec -T django-app
+        python manage.py shell -c
+        "from django.contrib.auth import get_user_model;
+        User = get_user_model();
+        User.objects.filter(username='{{ django_superuser_username }}').exists() or
+        User.objects.create_superuser('{{ django_superuser_username }}',
+        '{{ django_superuser_email }}',
+        '{{ django_superuser_password }}')"
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      ignore_errors: yes
+
+    - name: Test Django healthcheck endpoint
+      uri:
+        url: "http://localhost/health/"
+        return_content: yes
+        timeout: 10
+      register: health_check
+      retries: 5
+      delay: 2
+      until: health_check.status == 200
+
+    - name: Display healthcheck result
+      debug:
+        msg: "Health check status: {{ health_check.json.status }}"
+
+    - name: Display success message
+      debug:
+        msg: "Application deployed successfully! Accessible at http://{{ domain_name }}"

@@ -1,0 +1,23 @@
+---
+# ANSIBLE VAULT - ENCRYPTED SECRETS
+# This file should be encrypted with: ansible-vault encrypt inventories/production/group_vars/vault.yml
+# Edit with: ansible-vault edit inventories/production/group_vars/vault.yml
+# 
+# IMPORTANT: Never commit this file unencrypted to Git!
+
+# Django configuration
+vault_django_secret_key: "CHANGE_ME_SUPER_SECRET_KEY_MIN_50_CHARS_LONG_1234567890"
+vault_django_superuser_username: "admin"
+vault_django_superuser_password: "CHANGE_ME_STRONG_PASSWORD"
+vault_django_superuser_email: "admin@yourdomain.com"
+
+# Database
+vault_db_password: "CHANGE_ME_POSTGRESQL_PASSWORD"
+
+# SMTP / Email configuration
+vault_smtp_username: "your-email@gmail.com"
+vault_smtp_password: "CHANGE_ME_SMTP_APP_PASSWORD"
+vault_alert_email: "admin@yourdomain.com"
+
+# Monitoring webhook (Slack/Discord)
+vault_webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"

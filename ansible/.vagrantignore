@@ -1,0 +1,8 @@
+# Files to exclude from Vagrant sync
+
+.git/
+*.retry
+*.pyc
+__pycache__/
+.vagrant/
+*.log

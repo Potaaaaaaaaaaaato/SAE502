@@ -1,0 +1,165 @@
+---
+# Playbook 01: Prepare Host
+# Prepares a fresh Ubuntu/Debian server for deployment
+# - Updates system packages
+# - Installs base dependencies
+# - Creates deploy user with sudo rights
+# - Configures SSH security
+# - Creates project directories
+
+- name: Prepare server for deployment
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Display deployment target information
+      debug:
+        msg: "Preparing server {{ ansible_host }} for {{ project_name }}"
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+      register: upgrade_result
+
+    - name: Install base dependencies
+      apt:
+        name:
+          - git
+          - curl
+          - wget
+          - vim
+          - htop
+          - ufw
+          - fail2ban
+          - python3
+          - python3-pip
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - lsb-release
+          - acl  # For Ansible become_user
+        state: present
+
+    - name: Create deploy group
+      group:
+        name: "{{ deploy_group }}"
+        state: present
+
+    - name: Create deploy user
+      user:
+        name: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        groups: sudo
+        shell: /bin/bash
+        create_home: yes
+        state: present
+
+    - name: Allow deploy user to sudo without password
+      lineinfile:
+        path: /etc/sudoers.d/{{ deploy_user }}
+        line: "{{ deploy_user }} ALL=(ALL) NOPASSWD:ALL"
+        create: yes
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+    - name: Create .ssh directory for deploy user
+      file:
+        path: /home/{{ deploy_user }}/.ssh
+        state: directory
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        mode: '0700'
+
+    - name: Copy SSH authorized_keys from root to deploy user (if exists)
+      copy:
+        src: /root/.ssh/authorized_keys
+        dest: /home/{{ deploy_user }}/.ssh/authorized_keys
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        mode: '0600'
+        remote_src: yes
+      ignore_errors: yes
+
+    - name: Disable root login via SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+      notify: restart sshd
+
+    - name: Disable password authentication for SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+      notify: restart sshd
+
+    - name: Enable public key authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+        state: present
+      notify: restart sshd
+
+    - name: Create project root directory
+      file:
+        path: "{{ project_root }}"
+        state: directory
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        mode: '0755'
+
+    - name: Create project subdirectories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        mode: '0755'
+      loop:
+        - "{{ project_root }}/app"
+        - "{{ backup_dir }}"
+        - "{{ project_root }}/logs"
+        - "/var/log/{{ project_name }}"
+
+    - name: Set timezone to Europe/Paris
+      timezone:
+        name: Europe/Paris
+
+    - name: Enable automatic security updates
+      apt:
+        name: unattended-upgrades
+        state: present
+
+    - name: Configure unattended-upgrades
+      copy:
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        content: |
+          Unattended-Upgrade::Allowed-Origins {
+            "${distro_id}:${distro_codename}-security";
+          };
+          Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+          Unattended-Upgrade::Remove-Unused-Dependencies "true";
+          Unattended-Upgrade::Automatic-Reboot "false";
+        mode: '0644'
+
+    - name: Display success message
+      debug:
+        msg: "Server preparation complete! Next run: 02-install-docker.yml"
+
+  handlers:
+    - name: restart sshd
+      service:
+        name: sshd
+        state: restarted

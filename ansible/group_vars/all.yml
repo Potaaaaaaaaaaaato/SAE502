@@ -1,0 +1,65 @@
+---
+# Global variables for SAE502 project
+# These variables are shared across all environments
+
+# Project configuration
+project_name: sae502
+project_root: /opt/sae502
+deploy_user: deploy
+deploy_group: deploy
+
+# Git repository configuration
+git_repo_url: "https://github.com/YOUR_USERNAME/SAE502.git"
+git_branch: main
+
+# Domain and SSL configuration
+domain_name: yourdomain.com
+ssl_email: admin@yourdomain.com
+enable_www_redirect: false
+
+# Docker configuration
+docker_compose_version: "2.20.0"
+
+# Application ports
+app_port: 8000
+nginx_http_port: 80
+nginx_https_port: 443
+
+# Database configuration
+db_name: django_db
+db_user: djangouser
+
+# Backup configuration
+backup_dir: "{{ project_root }}/backups"
+backup_retention_days: 7
+backup_time: "2:00"
+
+# Security configuration
+ssh_port: 22
+fail2ban_bantime: "10m"
+fail2ban_maxretry: 5
+ufw_allow_ports:
+  - "{{ ssh_port }}"
+  - "{{ nginx_http_port }}"
+  - "{{ nginx_https_port }}"
+
+# SMTP configuration for alerts
+smtp_host: smtp.gmail.com
+smtp_port: 587
+smtp_use_tls: true
+
+# Monitoring configuration
+monitoring_check_interval: 300  # seconds (5 minutes)
+disk_usage_threshold: 90  # percentage
+
+# Import secrets from vault
+# These variables reference encrypted values in vault.yml
+django_secret_key: "{{ vault_django_secret_key }}"
+django_superuser_username: "{{ vault_django_superuser_username }}"
+django_superuser_password: "{{ vault_django_superuser_password }}"
+django_superuser_email: "{{ vault_django_superuser_email }}"
+db_password: "{{ vault_db_password }}"
+smtp_username: "{{ vault_smtp_username }}"
+smtp_password: "{{ vault_smtp_password }}"
+alert_email: "{{ vault_alert_email }}"
+webhook_url: "{{ vault_webhook_url }}"

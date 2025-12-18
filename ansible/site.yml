@@ -1,0 +1,137 @@
+---
+# SAE502 - Master Deployment Playbook
+# Orchestrates the complete deployment pipeline
+# Executes all playbooks in the correct order
+
+- name: SAE502 - Complete Deployment Pipeline
+  hosts: production
+  gather_facts: yes
+
+  tasks:
+    - name: Display deployment information
+      debug:
+        msg:
+          - "=========================================="
+          - "SAE502 - Automated Django Deployment"
+          - "=========================================="
+          - "Target: {{ ansible_host }}"
+          - "Domain: {{ domain_name }}"
+          - "Environment: {{ environment }}"
+          - "User: {{ deploy_user }}"
+          - "=========================================="
+
+    - name: Verify connectivity
+      ping:
+
+# Phase 1: Server Preparation
+- name: Phase 1 - Server Preparation
+  import_playbook: playbooks/01-prepare-host.yml
+
+# Phase 2: Docker Installation
+- name: Phase 2 - Docker Installation
+  import_playbook: playbooks/02-install-docker.yml
+
+# Phase 3: Application Deployment
+- name: Phase 3 - Application Deployment
+  import_playbook: playbooks/03-deploy-application.yml
+
+# Phase 4: SSL/TLS Configuration
+- name: Phase 4 - SSL/TLS Configuration
+  import_playbook: playbooks/04-ssl-letsencrypt.yml
+
+# Phase 5: Security Hardening
+- name: Phase 5 - Security Hardening
+  import_playbook: playbooks/05-security-hardening.yml
+
+# Phase 6: Monitoring and Alerting
+- name: Phase 6 - Monitoring and Alerting
+  import_playbook: playbooks/06-monitoring-alerting.yml
+
+# Phase 7: Backup Configuration
+- name: Phase 7 - Backup Configuration
+  import_playbook: playbooks/07-backup-database.yml
+
+# Final Validation
+- name: Final Validation and Summary
+  hosts: production
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Test HTTPS endpoint
+      uri:
+        url: "https://{{ domain_name }}/health/"
+        return_content: yes
+        validate_certs: yes
+        timeout: 10
+      register: final_health_check
+      retries: 3
+      delay: 2
+
+    - name: Verify all Docker containers are running
+      command: docker compose ps
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      register: containers_status
+      become_user: "{{ deploy_user }}"
+      changed_when: false
+
+    - name: Check UFW status
+      command: ufw status
+      register: ufw_final_status
+      changed_when: false
+
+    - name: Check fail2ban status
+      command: fail2ban-client status
+      register: fail2ban_final_status
+      changed_when: false
+
+    - name: Display deployment summary
+      debug:
+        msg:
+          - "=========================================="
+          - "✅ DEPLOYMENT COMPLETE!"
+          - "=========================================="
+          - "Application URL: https://{{ domain_name }}"
+          - "Health check: {{ final_health_check.json.status }}"
+          - "Admin panel: https://{{ domain_name }}/admin/"
+          - "Documentation: https://{{ domain_name }}/docs/"
+          - ""
+          - "Security Status:"
+          - "  - UFW Firewall: Active"
+          - "  - Fail2ban: Active"
+          - "  - SSL/TLS: Enabled"
+          - ""
+          - "Backups: Daily at {{ backup_time }}"
+          - "Monitoring: Active ({{ monitoring_check_interval }}s interval)"
+          - ""
+          - "Credentials:"
+          - "  - Django Admin: {{ django_superuser_username }}"
+          - "  - Deploy user: {{ deploy_user }}"
+          - "=========================================="
+
+    - name: Save deployment info to file
+      copy:
+        content: |
+          SAE502 Deployment Information
+          ==============================
+          Deployed: {{ ansible_date_time.iso8601 }}
+          Domain: {{ domain_name }}
+          
+          URLs:
+          - Application: https://{{ domain_name }}
+          - Admin: https://{{ domain_name }}/admin/
+          - Health: https://{{ domain_name }}/health/
+          
+          Server: {{ ansible_host }}
+          User: {{ deploy_user }}
+          Project Path: {{ project_root }}
+          
+          Backup: Daily at {{ backup_time }}
+          Retention: {{ backup_retention_days }} days
+          Location: {{ backup_dir }}
+        dest: "{{ project_root }}/DEPLOYMENT_INFO.txt"
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        mode: '0644'
+      become_user: "{{ deploy_user }}"

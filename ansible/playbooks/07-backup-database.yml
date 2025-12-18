@@ -1,0 +1,71 @@
+---
+# Playbook 07: Database Backup Configuration
+# Creates backup script and configures cron job
+# Tests backup and restoration
+
+- name: Configure database backups
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Display backup configuration info
+      debug:
+        msg: "Configuring PostgreSQL backups to {{ backup_dir }}"
+
+    - name: Ensure backup directory exists
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        mode: '0755'
+
+    - name: Create backup script from template
+      template:
+        src: ../templates/backup-script.sh.j2
+        dest: "{{ project_root }}/backup.sh"
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        mode: '0750'
+
+    - name: Test backup script execution
+      command: "{{ project_root }}/backup.sh"
+      become_user: "{{ deploy_user }}"
+      register: backup_test
+
+    - name: Display backup test result
+      debug:
+        msg: "Backup test {{ 'succeeded' if backup_test.rc == 0 else 'failed' }}"
+
+    - name: Find created backup file
+      find:
+        paths: "{{ backup_dir }}"
+        patterns: "backup_*.sql.gz"
+      register: backup_files
+
+    - name: Display backup file location
+      debug:
+        msg: "Backup created: {{ backup_files.files[0].path }}"
+      when: backup_files.matched > 0
+
+    - name: Configure cron job for automatic backups
+      cron:
+        name: "PostgreSQL automatic backup"
+        job: "{{ project_root }}/backup.sh >> {{ project_root }}/logs/backup.log 2>&1"
+        minute: "0"
+        hour: "{{ backup_time.split(':')[0] }}"
+        user: "{{ deploy_user }}"
+        state: present
+
+    - name: Create restore script from template
+      template:
+        src: ../templates/restore-script.sh.j2
+        dest: "{{ project_root }}/restore.sh"
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_group }}"
+        mode: '0750'
+
+    - name: Display success message
+      debug:
+        msg: "Backup configured! Daily backups at {{ backup_time }}, retention {{ backup_retention_days }} days"

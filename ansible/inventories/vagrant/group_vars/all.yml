@@ -1,0 +1,24 @@
+---
+# Vagrant-specific variables
+# Overrides some production variables for local testing
+
+# Use the global variables as base
+# This file only overrides what's different for Vagrant
+
+# Domain configuration for testing (no real domain)
+domain_name: "192.168.56.10"
+ssl_email: "test@localhost"
+enable_www_redirect: false
+
+# Disable SSL certificate generation for Vagrant
+# (Let's Encrypt won't work with local IP)
+skip_ssl: true
+
+# Use local Git repo instead of remote (optional)
+# git_repo_url: "file:///vagrant/../.."
+
+# Simplified backup for testing
+backup_retention_days: 3
+
+# Test monitoring with shorter intervals
+monitoring_check_interval: 60  # 1 minute for testing

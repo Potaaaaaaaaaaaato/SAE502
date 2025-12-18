@@ -1,0 +1,108 @@
+---
+# Playbook 04: Configure SSL/TLS with Let's Encrypt
+# Installs Certbot and generates SSL certificates
+# Configures Nginx for HTTPS
+
+- name: Configure SSL/TLS with Let's Encrypt
+  hosts: production
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Display SSL configuration info
+      debug:
+        msg: "Configuring SSL for {{ domain_name }}"
+
+    - name: Install Certbot and Certbot Nginx plugin
+      apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+
+    - name: Check if certificate already exists
+      stat:
+        path: "/etc/letsencrypt/live/{{ domain_name }}/fullchain.pem"
+      register: cert_exists
+
+    - name: Stop Nginx temporarily for standalone certificate generation
+      systemd:
+        name: nginx
+        state: stopped
+      when: not cert_exists.stat.exists
+
+    - name: Generate SSL certificate with Certbot (standalone mode)
+      command: >
+        certbot certonly --standalone
+        --non-interactive
+        --agree-tos
+        --email {{ ssl_email }}
+        -d {{ domain_name }}
+        {% if enable_www_redirect %}-d www.{{ domain_name }}{% endif %}
+      when: not cert_exists.stat.exists
+      register: certbot_result
+
+    - name: Display Certbot result
+      debug:
+        var: certbot_result.stdout_lines
+      when: not cert_exists.stat.exists
+
+    - name: Start Nginx after certificate generation
+      systemd:
+        name: nginx
+        state: started
+      when: not cert_exists.stat.exists
+
+    - name: Configure automatic certificate renewal
+      cron:
+        name: "Renew Let's Encrypt certificates"
+        job: "certbot renew --quiet --post-hook 'systemctl reload nginx'"
+        minute: "0"
+        hour: "3"
+        day: "*/7"
+        state: present
+
+    - name: Test certificate renewal (dry run)
+      command: certbot renew --dry-run
+      register: renewal_test
+      changed_when: false
+
+    - name: Display renewal test result
+      debug:
+        msg: "Certificate renewal test: {{ 'SUCCESS' if renewal_test.rc == 0 else 'FAILED' }}"
+
+    - name: Update Nginx configuration to use SSL
+      become_user: "{{ deploy_user }}"
+      template:
+        src: ../templates/nginx-production.conf.j2
+        dest: "{{ project_root }}/app/docker/nginx/nginx.conf"
+        mode: '0644'
+
+    - name: Restart Nginx container to apply SSL configuration
+      command: docker compose restart nginx
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      become_user: "{{ deploy_user }}"
+
+    - name: Wait for Nginx to be ready
+      wait_for:
+        port: 443
+        host: "{{ domain_name }}"
+        timeout: 30
+
+    - name: Test HTTPS endpoint
+      uri:
+        url: "https://{{ domain_name }}/health/"
+        return_content: yes
+        validate_certs: yes
+      register: https_check
+      retries: 3
+      delay: 2
+
+    - name: Display HTTPS check result
+      debug:
+        msg: "HTTPS status: {{ https_check.status }} - {{ https_check.json.status }}"
+
+    - name: Display success message
+      debug:
+        msg: "SSL/TLS configured successfully! Site accessible at https://{{ domain_name }}"

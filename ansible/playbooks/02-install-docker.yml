@@ -1,0 +1,140 @@
+---
+# Playbook 02: Install Docker and Docker Compose
+# Installs Docker Engine and Docker Compose V2
+# Configures Docker for the deploy user
+
+- name: Install Docker and Docker Compose
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Display installation information
+      debug:
+        msg: "Installing Docker and Docker Compose on {{ ansible_host }}"
+
+    - name: Remove old Docker versions (if any)
+      apt:
+        name:
+          - docker
+          - docker-engine
+          - docker.io
+          - containerd
+          - runc
+        state: absent
+
+    - name: Install Docker dependencies
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Create directory for Docker GPG key
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker's official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        keyring: /etc/apt/keyrings/docker.gpg
+        state: present
+
+    - name: Get system architecture
+      command: dpkg --print-architecture
+      register: system_arch
+      changed_when: false
+
+    - name: Get distribution codename
+      command: lsb_release -cs
+      register: distro_codename
+      changed_when: false
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch={{ system_arch.stdout }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ distro_codename.stdout }} stable"
+        state: present
+        filename: docker
+
+    - name: Update apt cache after adding Docker repo
+      apt:
+        update_cache: yes
+
+    - name: Install Docker Engine and Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Add deploy user to docker group
+      user:
+        name: "{{ deploy_user }}"
+        groups: docker
+        append: yes
+
+    - name: Enable and start Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Configure Docker daemon
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            },
+            "storage-driver": "overlay2"
+          }
+        mode: '0644'
+      notify: restart docker
+
+    - name: Wait for Docker service to be ready
+      wait_for:
+        path: /var/run/docker.sock
+        timeout: 30
+
+    - name: Test Docker installation
+      command: docker run --rm hello-world
+      register: docker_test
+      changed_when: false
+      become_user: "{{ deploy_user }}"
+
+    - name: Display Docker version
+      command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Display Docker Compose version
+      command: docker compose version
+      register: docker_compose_version
+      changed_when: false
+
+    - name: Show installed versions
+      debug:
+        msg:
+          - "{{ docker_version.stdout }}"
+          - "{{ docker_compose_version.stdout }}"
+
+    - name: Display success message
+      debug:
+        msg: "Docker and Docker Compose installed successfully! Next run: 03-deploy-application.yml"
+
+  handlers:
+    - name: restart docker
+      systemd:
+        name: docker
+        state: restarted

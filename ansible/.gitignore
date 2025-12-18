@@ -1,0 +1,13 @@
+# Ansible Vault password file
+# Add this file to .gitignore!
+*.vault_pass
+vault_password.txt
+
+# Ansible retry files
+*.retry
+
+# Ansible facts cache
+/tmp/ansible_facts/
+
+# Decrypted vault files (backup)
+*_decrypted.yml

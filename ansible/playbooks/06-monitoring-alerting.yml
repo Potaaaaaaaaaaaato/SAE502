@@ -1,0 +1,63 @@
+---
+# Playbook 06: Monitoring and Alerting
+# Ensures monitoring container is configured
+# Tests alert mechanisms
+
+- name: Configure monitoring and alerting
+  hosts: all
+  become: yes
+  become_user: "{{ deploy_user }}"
+  gather_facts: yes
+
+  tasks:
+    - name: Display monitoring configuration info
+      debug:
+        msg: "Configuring monitoring for {{ project_name }}"
+
+    - name: Verify monitoring container is running
+      command: docker compose ps monitoring
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      register: monitoring_status
+      changed_when: false
+
+    - name: Display monitoring container status
+      debug:
+        var: monitoring_status.stdout_lines
+
+    - name: Test healthcheck script manually
+      command: docker compose exec -T monitoring python healthcheck.py
+      args:
+        chdir: "{{ project_root }}/app/docker"
+      register: healthcheck_test
+      ignore_errors: yes
+
+    - name: Display healthcheck test result
+      debug:
+        var: healthcheck_test.stdout_lines
+
+    - name: Verify monitoring logs are being created
+      stat:
+        path: "{{ project_root }}/logs/monitoring.log"
+      register: monitoring_log
+      become: yes
+
+    - name: Configure logrotate for monitoring logs
+      become: yes
+      copy:
+        dest: /etc/logrotate.d/sae502-monitoring
+        content: |
+          {{ project_root }}/logs/*.log {
+              daily
+              rotate 7
+              compress
+              delaycompress
+              missingok
+              notifempty
+              create 0640 {{ deploy_user }} {{ deploy_group }}
+          }
+        mode: '0644'
+
+    - name: Display success message
+      debug:
+        msg: "Monitoring configured! Healthchecks run every {{ monitoring_check_interval }} seconds."

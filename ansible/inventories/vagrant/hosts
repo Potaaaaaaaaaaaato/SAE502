@@ -1,0 +1,14 @@
+# Vagrant Test Inventory
+# For local testing with Vagrant VM
+
+[vagrant]
+sae502-vagrant ansible_host=192.168.56.10 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/default/virtualbox/private_key
+
+[vagrant:vars]
+ansible_port=22
+ansible_python_interpreter=/usr/bin/python3
+environment=staging
+
+# Override production variables for local testing
+domain_name=192.168.56.10
+enable_www_redirect=false

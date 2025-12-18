@@ -1,0 +1,9 @@
+# Production Inventory
+# Update ansible_host with your actual server IP address
+
+[production]
+sae502-prod ansible_host=YOUR_SERVER_IP ansible_user=root ansible_python_interpreter=/usr/bin/python3
+
+[production:vars]
+ansible_port=22
+environment=production

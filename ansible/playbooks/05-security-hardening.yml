@@ -1,0 +1,166 @@
+---
+# Playbook 05: Security Hardening
+# Configures UFW firewall and fail2ban
+# Hardens system security settings
+
+- name: Security hardening
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Display security configuration info
+      debug:
+        msg: "Configuring firewall and fail2ban"
+
+    # UFW Firewall Configuration
+    - name: Reset UFW to default
+      ufw:
+        state: reset
+
+    - name: Set UFW default incoming policy to deny
+      ufw:
+        direction: incoming
+        policy: deny
+
+    - name: Set UFW default outgoing policy to allow
+      ufw:
+        direction: outgoing
+        policy: allow
+
+    - name: Allow SSH port
+      ufw:
+        rule: allow
+        port: "{{ ssh_port }}"
+        proto: tcp
+
+    - name: Allow HTTP port
+      ufw:
+        rule: allow
+        port: "{{ nginx_http_port }}"
+        proto: tcp
+
+    - name: Allow HTTPS port
+      ufw:
+        rule: allow
+        port: "{{ nginx_https_port }}"
+        proto: tcp
+
+    - name: Enable UFW with rate limiting on SSH
+      ufw:
+        rule: limit
+        port: "{{ ssh_port }}"
+        proto: tcp
+
+    - name: Enable UFW firewall
+      ufw:
+        state: enabled
+
+    - name: Display UFW status
+      command: ufw status verbose
+      register: ufw_status
+      changed_when: false
+
+    - name: Show UFW status
+      debug:
+        var: ufw_status.stdout_lines
+
+    # Fail2ban Configuration
+    - name: Ensure fail2ban is installed
+      apt:
+        name: fail2ban
+        state: present
+
+    - name: Create fail2ban local configuration directory
+      file:
+        path: /etc/fail2ban/jail.d
+        state: directory
+        mode: '0755'
+
+    - name: Configure fail2ban for SSH
+      copy:
+        dest: /etc/fail2ban/jail.d/sshd.local
+        content: |
+          [sshd]
+          enabled = true
+          port = {{ ssh_port }}
+          filter = sshd
+          logpath = /var/log/auth.log
+          maxretry = {{ fail2ban_maxretry }}
+          bantime = {{ fail2ban_bantime }}
+          findtime = 10m
+        mode: '0644'
+      notify: restart fail2ban
+
+    - name: Configure fail2ban for Nginx
+      copy:
+        dest: /etc/fail2ban/jail.d/nginx.local
+        content: |
+          [nginx-http-auth]
+          enabled = true
+          port = http,https
+          filter = nginx-http-auth
+          logpath = /var/log/nginx/error.log
+          maxretry = 3
+          bantime = {{ fail2ban_bantime }}
+          
+          [nginx-limit-req]
+          enabled = true
+          port = http,https
+          filter = nginx-limit-req
+          logpath = /var/log/nginx/error.log
+          maxretry = 10
+          bantime = {{ fail2ban_bantime }}
+        mode: '0644'
+      notify: restart fail2ban
+
+    - name: Enable and start fail2ban
+      systemd:
+        name: fail2ban
+        enabled: yes
+        state: started
+
+    - name: Display fail2ban status
+      command: fail2ban-client status
+      register: fail2ban_status
+      changed_when: false
+
+    - name: Show fail2ban status
+      debug:
+        var: fail2ban_status.stdout_lines
+
+    # System Hardening
+    - name: Configure sysctl for network security
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: 'net.ipv4.conf.all.rp_filter', value: '1' }
+        - { name: 'net.ipv4.conf.default.rp_filter', value: '1' }
+        - { name: 'net.ipv4.icmp_echo_ignore_broadcasts', value: '1' }
+        - { name: 'net.ipv4.conf.all.accept_source_route', value: '0' }
+        - { name: 'net.ipv4.conf.default.accept_source_route', value: '0' }
+        - { name: 'net.ipv4.conf.all.send_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.default.send_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.all.accept_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.default.accept_redirects', value: '0' }
+
+    - name: Set secure file permissions on sensitive files
+      file:
+        path: "{{ item }}"
+        mode: '0600'
+      loop:
+        - "{{ project_root }}/app/docker/.env"
+      when: item is file
+
+    - name: Display success message
+      debug:
+        msg: "Security hardening complete! UFW and fail2ban are active."
+
+  handlers:
+    - name: restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted

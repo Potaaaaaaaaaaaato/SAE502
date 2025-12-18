@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 def home(request):
     """Home page view"""
     context = {
-        'title': 'SAE502 - Déploiement Automatisé Django',
-        'timestamp': timezone.now(),
+        'title': 'SAE502',
     }
     return render(request, 'home.html', context)
 
