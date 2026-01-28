@@ -137,17 +137,26 @@ SAE502/
 │
 ├── ansible/                      # Playbooks Ansible
 │   ├── site.yml                  # Playbook master
-│   ├── playbook-prepare-host.yml
-│   ├── playbook-deploy-application.yml
-│   ├── playbook-ssl-letsencrypt.yml
-│   ├── playbook-security-hardening.yml
-│   ├── playbook-monitoring-alerting.yml
-│   ├── playbook-backup-database.yml
-│   ├── playbook-rollback.yml
-│   ├── playbook-cleanup.yml
-│   └── inventories/
-│       └── production/
-│           └── hosts
+│   ├── ansible.cfg               # Configuration Ansible
+│   ├── setup-multipass-ssh.sh    # Script de configuration SSH Multipass
+│   ├── playbooks/                # Playbooks modulaires
+│   │   ├── 01-prepare-host.yml
+│   │   ├── 02-install-docker.yml
+│   │   ├── 03-deploy-application.yml
+│   │   ├── 04-ssl-letsencrypt.yml
+│   │   ├── 04-ssl-letsencrypt-conditional.yml
+│   │   ├── 05-security-hardening.yml
+│   │   ├── 06-monitoring-alerting.yml
+│   │   └── 07-backup-database.yml
+│   ├── inventories/
+│   │   ├── production/
+│   │   │   └── hosts
+│   │   └── multipass/            # Inventaire de test Multipass
+│   │       ├── hosts
+│   │       └── group_vars/all.yml
+│   ├── group_vars/
+│   │   └── all.yml               # Variables globales
+│   └── templates/                # Templates Jinja2
 │
 ├── scripts/                      # Scripts utilitaires
 │   ├── backup.sh
@@ -194,7 +203,7 @@ WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK
 
 ## Production avec ansible
 
-### Déploiement complet sur serveur vierge
+### Deploiement complet sur serveur vierge
 
 1. **Configurer l'inventaire Ansible**
    ```bash
@@ -208,12 +217,36 @@ WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK
    # Ajouter vos secrets
    ```
 
-3. **Lancer le déploiement complet**
+3. **Lancer le deploiement complet**
    ```bash
    ansible-playbook -i ansible/inventories/production ansible/site.yml --ask-vault-pass
    ```
 
-En **une seule commande**, le playbook maître va :
+### Test local avec Multipass (macOS/Linux)
+
+```bash
+# Creer la VM
+multipass launch --name sae502-test -c 2 -m 2G -d 20G
+
+# Configurer SSH
+cd ansible
+./setup-multipass-ssh.sh
+
+# Deploiement complet
+ansible-playbook -i inventories/multipass/hosts \
+  playbooks/01-prepare-host.yml \
+  playbooks/02-install-docker.yml \
+  playbooks/03-deploy-application.yml \
+  playbooks/04-ssl-letsencrypt-conditional.yml \
+  playbooks/05-security-hardening.yml \
+  playbooks/06-monitoring-alerting.yml \
+  playbooks/07-backup-database.yml
+
+# Stopper la VM
+multipass stop sae502-test
+```
+
+En **une seule commande**, les playbooks vont :
 - Préparer le serveur (Docker, dépendances, utilisateur)
 - Configurer le firewall (UFW) et fail2ban
 - Déployer l'application avec Docker Compose

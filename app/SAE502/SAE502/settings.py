@@ -152,7 +152,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
 
 # ==============================================================================
-# EMAIL CONFIGURATION
+# EMAIL CONFIGURATION 
 # ==============================================================================
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')

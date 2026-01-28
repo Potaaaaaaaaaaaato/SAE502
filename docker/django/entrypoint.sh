@@ -3,6 +3,10 @@ set -e
 
 echo "🚀 Starting Django application..."
 
+# Ensure logs directory exists with correct permissions
+mkdir -p /app/logs
+touch /app/logs/django.log
+
 # Wait for PostgreSQL to be ready
 echo "⏳ Waiting for PostgreSQL..."
 until PGPASSWORD=$DB_PASSWORD psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c '\q' 2>/dev/null; do

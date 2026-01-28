@@ -2,7 +2,7 @@
 # For local testing with Multipass VM
 
 [multipass]
-sae502-test ansible_host=192.168.2.2 ansible_user=ubuntu ansible_ssh_private_key_file=/Users/tristan/.ssh/id_multipass_sae502
+sae502-test ansible_host=192.168.2.4 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
 
 [multipass:vars]
 ansible_port=22
@@ -11,6 +11,10 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/
 env_name=staging
 
 # Override production variables for local testing
-domain_name=192.168.2.2
+domain_name=192.168.2.4
 enable_www_redirect=false
 skip_ssl=true
+
+# Dev mode: copy local files instead of Git clone
+use_local_source=true
+local_project_path=/Users/tristan/Documents/3eme_année/SAE502/SAE502

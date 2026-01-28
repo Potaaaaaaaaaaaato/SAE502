@@ -16,8 +16,30 @@
   tasks:
     - name: Display deployment information
       debug:
-        msg: "Deploying {{ project_name }} from {{ git_repo_url }}"
+        msg: "Deploying {{ project_name }} {% if use_local_source | default(false) %}from local source{% else %}from {{ git_repo_url }}{% endif %}"
 
+    # === DEV MODE: Copy files from local machine ===
+    - name: Sync local source to remote (dev mode)
+      synchronize:
+        src: "{{ local_project_path }}/"
+        dest: "{{ project_root }}/app/"
+        delete: yes
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=venv"
+          - "--exclude=__pycache__"
+          - "--exclude=*.pyc"
+          - "--exclude=.env"
+          - "--exclude=docker/logs"
+          - "--exclude=docker/nginx/ssl"
+      when: use_local_source | default(false) | bool
+
+    - name: Display sync status (dev mode)
+      debug:
+        msg: "Local files synced to {{ project_root }}/app"
+      when: use_local_source | default(false) | bool
+
+    # === PRODUCTION MODE: Clone from Git ===
     - name: Clone or update Git repository
       git:
         repo: "{{ git_repo_url }}"
@@ -25,10 +47,12 @@
         version: "{{ git_branch }}"
         force: yes
       register: git_result
+      when: not (use_local_source | default(false) | bool)
 
     - name: Display Git status
       debug:
         msg: "Repository cloned/updated. Current HEAD: {{ git_result.after }}"
+      when: not (use_local_source | default(false) | bool)
 
     - name: Generate .env file from Vault variables
       template:
@@ -42,6 +66,16 @@
         chdir: "{{ project_root }}/app/docker"
       ignore_errors: yes
 
+    - name: Create logs directory with correct permissions
+      become: yes
+      become_user: root
+      file:
+        path: "{{ project_root }}/app/docker/logs"
+        state: directory
+        owner: 1000
+        group: 1000
+        mode: '0755'
+
     - name: Build Docker images
       command: docker compose build --no-cache
       args:
@@ -54,23 +88,32 @@
         chdir: "{{ project_root }}/app/docker"
       register: compose_up_result
 
-    - name: Wait for Django container to be healthy
-      command: docker compose ps
+    - name: Fix logs directory permissions (after container creation)
+      become: yes
+      become_user: root
+      file:
+        path: "{{ project_root }}/app/docker/logs"
+        state: directory
+        owner: 1000
+        group: 1000
+        mode: '0755'
+        recurse: yes
+
+    - name: Restart Django container to apply permissions
+      command: docker compose restart django-app
       args:
         chdir: "{{ project_root }}/app/docker"
-      register: compose_ps
-      until: "'(healthy)' in compose_ps.stdout"
+
+    - name: Wait for Django health endpoint
+      command: curl -sf http://localhost/health/
+      register: health_check
+      until: health_check.rc == 0
       retries: 30
-      delay: 2
+      delay: 5
 
     - name: Display container status
       debug:
         var: compose_ps.stdout_lines
-
-    - name: Run Django migrations
-      command: docker compose exec -T django-app python manage.py migrate --noinput
-      args:
-        chdir: "{{ project_root }}/app/docker"
 
     - name: Create Django superuser (if not exists)
       command: >

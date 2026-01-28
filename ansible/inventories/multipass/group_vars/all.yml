@@ -1,0 +1,77 @@
+---
+# Test variables for Multipass environment
+# These override vault variables for local testing
+
+# Project configuration (copied from global)
+project_name: sae502
+project_root: /opt/sae502
+deploy_user: deploy
+deploy_group: deploy
+
+# Git repository
+git_repo_url: "https://github.com/Potaaaaaaaaaaaato/SAE502.git"
+git_branch: "main"
+
+# Multipass-specific overrides
+domain_name: "192.168.2.4"
+ssl_email: "test@local.dev"
+enable_www_redirect: false
+skip_ssl: true
+env_name: staging
+
+# Ports
+app_port: 8000
+nginx_http_port: 80
+nginx_https_port: 443
+ssh_port: 22
+
+# Database
+db_name: django_db
+db_user: djangouser
+
+# Backup
+backup_dir: "{{ project_root }}/backups"
+backup_retention_days: 7
+backup_time: "2:00"
+
+# Security
+fail2ban_bantime: "10m"
+fail2ban_maxretry: 5
+ufw_allow_ports:
+  - "{{ ssh_port }}"
+  - "{{ nginx_http_port }}"
+  - "{{ nginx_https_port }}"
+
+# SMTP (test values)
+smtp_host: smtp.gmail.com
+smtp_port: 587
+smtp_use_tls: true
+
+# Monitoring
+monitoring_check_interval: 300
+disk_usage_threshold: 90
+
+# Docker
+docker_compose_version: "2.20.0"
+
+# Vault overrides (test values - DO NOT use in production!)
+vault_django_secret_key: "test-secret-key-for-local-development-only-12345"
+vault_django_superuser_username: "admin"
+vault_django_superuser_password: "testpassword123"
+vault_django_superuser_email: "admin@test.local"
+vault_db_password: "testdbpassword123"
+vault_smtp_username: "test@example.com"
+vault_smtp_password: "testsmtppassword"
+vault_alert_email: "alerts@test.local"
+vault_webhook_url: "https://hooks.example.com/test"
+
+# Resolved vault references
+django_secret_key: "{{ vault_django_secret_key }}"
+django_superuser_username: "{{ vault_django_superuser_username }}"
+django_superuser_password: "{{ vault_django_superuser_password }}"
+django_superuser_email: "{{ vault_django_superuser_email }}"
+db_password: "{{ vault_db_password }}"
+smtp_username: "{{ vault_smtp_username }}"
+smtp_password: "{{ vault_smtp_password }}"
+alert_email: "{{ vault_alert_email }}"
+webhook_url: "{{ vault_webhook_url }}"

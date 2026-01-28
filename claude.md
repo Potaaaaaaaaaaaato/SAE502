@@ -106,7 +106,9 @@ SAE502/
 │       ├── 01-prepare-host.yml       # Préparation serveur Ubuntu/Debian
 │       ├── 02-install-docker.yml     # Installation Docker + Compose
 │       ├── 03-deploy-application.yml # Déploiement de l'application
-│       ├── 04-ssl-letsencrypt.yml    # Certificats SSL Let's Encrypt
+│       ├── 04-ssl-letsencrypt.yml    # Certificats SSL Let's Encrypt (production)
+│       ├── 04-ssl-letsencrypt-conditional.yml # SSL conditionnel (skip en staging)
+│       ├── 04-ssl-self-signed.yml    # SSL auto-signé (démo)
 │       ├── 05-security-hardening.yml # UFW + fail2ban + sysctl
 │       ├── 06-monitoring-alerting.yml# Configuration monitoring
 │       └── 07-backup-database.yml    # Configuration backups automatiques
@@ -137,7 +139,8 @@ SAE502/
 
 ### Frontend
 - **HTML5/CSS3** - Templates Django responsive
-- **Google Fonts (Outfit)** - Typographie moderne
+- **Design minimaliste** - Fond blanc cassé, typographie Inter épurée
+- **Google Fonts (Inter)** - Typographie moderne
 
 ### Infrastructure
 - **Docker & Docker Compose 3.8** - Conteneurisation
@@ -353,6 +356,42 @@ vagrant up
 ansible-playbook -i inventories/vagrant site.yml
 ```
 
+### Test local avec Multipass (recommandé pour macOS Apple Silicon)
+
+```bash
+# Créer la VM
+multipass launch --name sae502-test -c 2 -m 2G -d 20G
+
+# Configurer SSH (utiliser le script fourni)
+cd ansible
+./setup-multipass-ssh.sh
+
+# Ou manuellement :
+cat ~/.ssh/id_rsa.pub | multipass exec sae502-test -- bash -c "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+
+# Mettre à jour l'IP dans inventories/multipass/hosts et inventories/multipass/group_vars/all.yml
+multipass info sae502-test
+
+# Déploiement complet (tous les playbooks d'un coup)
+ansible-playbook -i inventories/multipass/hosts \
+  playbooks/01-prepare-host.yml \
+  playbooks/02-install-docker.yml \
+  playbooks/03-deploy-application.yml \
+  playbooks/04-ssl-letsencrypt-conditional.yml \
+  playbooks/05-security-hardening.yml \
+  playbooks/06-monitoring-alerting.yml \
+  playbooks/07-backup-database.yml
+
+# Stopper les conteneurs sur la VM
+ssh -i ~/.ssh/id_rsa ubuntu@<IP_VM> "cd /opt/sae502/app/docker && sudo docker compose down"
+
+# Stopper la VM Multipass
+multipass stop sae502-test
+
+# Supprimer la VM
+multipass delete sae502-test --purge
+```
+
 ---
 
 ## 📊 Monitoring
@@ -520,4 +559,4 @@ docker compose exec django-app python manage.py collectstatic --noinput
 
 ---
 
-*Dernière mise à jour : 14 décembre 2025*
+*Dernière mise à jour : 28 janvier 2026*

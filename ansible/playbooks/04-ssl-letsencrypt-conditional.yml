@@ -4,7 +4,7 @@
 # Only runs SSL setup for production with real domain
 
 - name: Configure SSL/TLS with Let's Encrypt
-  hosts: production
+  hosts: all
   become: yes
   gather_facts: yes
   tasks:
