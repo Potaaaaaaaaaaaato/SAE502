@@ -1,8 +1,5 @@
 # SAE502 - Déploiement automatisé Django
 
-[![CI](https://github.com/<username>/SAE502/workflows/CI%20-%20Continuous%20Integration/badge.svg)](https://github.com/<username>/SAE502/actions/workflows/ci.yml)
-[![Docker Build](https://github.com/<username>/SAE502/workflows/Build%20%26%20Push%20Docker%20Images/badge.svg)](https://github.com/<username>/SAE502/actions/workflows/docker-build.yml)
-
 ![SAE502 Banner](https://img.shields.io/badge/SAE502-Automatisation%20Django-blue?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=green)
