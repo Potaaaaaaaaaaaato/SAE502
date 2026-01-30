@@ -1,5 +1,8 @@
 # SAE502 - Déploiement automatisé Django
 
+[![CI](https://github.com/<username>/SAE502/workflows/CI%20-%20Continuous%20Integration/badge.svg)](https://github.com/<username>/SAE502/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/<username>/SAE502/workflows/Build%20%26%20Push%20Docker%20Images/badge.svg)](https://github.com/<username>/SAE502/actions/workflows/docker-build.yml)
+
 ![SAE502 Banner](https://img.shields.io/badge/SAE502-Automatisation%20Django-blue?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=green)
@@ -353,15 +356,51 @@ Voir [.github/CICD_GUIDE.md](.github/CICD_GUIDE.md) pour :
 - Instructions de déploiement
 - Troubleshooting
 
-## Documentation (exemple)
+## Documentation
 
-La documentation complète est générée automatiquement avec Sphinx et accessible à `/docs` :
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://username.github.io/SAE502/)
+
+La documentation complète est générée automatiquement avec **Sphinx** et déployée sur **GitHub Pages**.
+
+### 📖 Accéder à la documentation en ligne
+
+La documentation est automatiquement mise à jour à chaque push sur `main` :
+
+🔗 **https://potaaaaaaaaaaaato.github.io/SAE502/** *(remplacez `username` par votre nom d'utilisateur GitHub)*
+
+### 📚 Contenu de la documentation
+
+- **Installation** - Guide d'installation local et production
+- **Architecture** - Diagrammes et description des services
+- **Docker** - Configuration et commandes Docker Compose
+- **Ansible** - Playbooks et déploiement automatisé
+- **API** - Endpoints et exemples d'utilisation
+- **Sécurité** - Mesures de sécurité implémentées
+- **Monitoring** - Healthchecks et alertes
+- **Backups** - Procédures de sauvegarde et restauration
+
+### 🛠️ Générer la documentation localement
 
 ```bash
-# Générer la documentation localement
+# Installer Sphinx et le thème
+pip install sphinx sphinx-rtd-theme
+
+# Générer la documentation HTML
 cd docs
-sphinx-build -b html . _build/html
+make html
+
+# Ouvrir dans le navigateur
+open _build/html/index.html
 ```
+
+### 🚀 Déploiement automatique
+
+La documentation est automatiquement générée et déployée via GitHub Actions (`.github/workflows/docs.yml`) :
+
+- ✅ Génération automatique à chaque push sur `main`
+- ✅ Hébergement gratuit sur GitHub Pages
+- ✅ Thème Read the Docs (langue française)
+- ✅ Recherche intégrée
 
 ---
 
