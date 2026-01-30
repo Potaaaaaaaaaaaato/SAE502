@@ -72,7 +72,7 @@ Ce projet supprime totalement les interventions manuelles de déploiement grâce
 
 1. **Cloner le repository**
    ```bash
-   git clone <votre-repo>
+   git clone https://github.com/Potaaaaaaaaaaaato/SAE502.git
    cd SAE502
    ```
 
