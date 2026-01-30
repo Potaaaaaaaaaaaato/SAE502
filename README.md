@@ -1,7 +1,7 @@
 # SAE502 - Déploiement automatisé Django
 
-[![CI](https://github.com/<username>/SAE502/workflows/CI%20-%20Continuous%20Integration/badge.svg)](https://github.com/<username>/SAE502/actions/workflows/ci.yml)
-[![Docker Build](https://github.com/<username>/SAE502/workflows/Build%20%26%20Push%20Docker%20Images/badge.svg)](https://github.com/<username>/SAE502/actions/workflows/docker-build.yml)
+[![CI](https://github.com/<username>/SAE502/workflows/CI%20-%20Continuous%20Integration/badge.svg)](https://github.com/potaaaaaaaaaaaato/SAE502/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/<username>/SAE502/workflows/Build%20%26%20Push%20Docker%20Images/badge.svg)](https://github.com/potaaaaaaaaaaaato/SAE502/actions/workflows/docker-build.yml)
 
 ![SAE502 Banner](https://img.shields.io/badge/SAE502-Automatisation%20Django-blue?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
@@ -358,7 +358,7 @@ Voir [.github/CICD_GUIDE.md](.github/CICD_GUIDE.md) pour :
 
 ## Documentation
 
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://username.github.io/SAE502/)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://potaaaaaaaaaaaato.github.io/SAE502/)
 
 La documentation complète est générée automatiquement avec **Sphinx** et déployée sur **GitHub Pages**.
 
@@ -366,7 +366,7 @@ La documentation complète est générée automatiquement avec **Sphinx** et dé
 
 La documentation est automatiquement mise à jour à chaque push sur `main` :
 
-🔗 **https://potaaaaaaaaaaaato.github.io/SAE502/** *(remplacez `username` par votre nom d'utilisateur GitHub)*
+🔗 **https://potaaaaaaaaaaaato.github.io/SAE502/**
 
 ### 📚 Contenu de la documentation
 
