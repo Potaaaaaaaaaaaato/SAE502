@@ -339,7 +339,7 @@ Intégration complète avec GitHub Actions pour automatiser tests, builds et dé
 - 🏷️ Tagging automatique (latest, version, sha)
 - 🔔 Notifications Slack/Telegram
 
-#### 🚀 CD - Continuous Deployment (Manuel)
+#### 🚀 CD - Continuous Deployment (manuel - exemple)
 **Déclenchement** : Manuel uniquement  
 **Actions** :
 - 🎯 Choix de l'environnement (staging/production)
@@ -348,7 +348,7 @@ Intégration complète avec GitHub Actions pour automatiser tests, builds et dé
 - ✅ Health check post-déploiement
 - 🔔 Notifications de succès/échec
 
-### Configuration
+### Configuration (exemple)
 
 Voir [.github/CICD_GUIDE.md](.github/CICD_GUIDE.md) pour :
 - Configuration des secrets GitHub
@@ -356,7 +356,7 @@ Voir [.github/CICD_GUIDE.md](.github/CICD_GUIDE.md) pour :
 - Instructions de déploiement
 - Troubleshooting
 
-## Documentation
+## Documentation (exemple)
 
 La documentation complète est générée automatiquement avec Sphinx et accessible à `/docs` :
 
